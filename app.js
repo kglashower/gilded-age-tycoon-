@@ -180,6 +180,18 @@ const ui = {
   upgradeBranches: {}
 };
 
+function isLikelyMobileBrowser() {
+  const ua = navigator.userAgent || "";
+  const mobileUa = /Android|iPhone|iPad|iPod|IEMobile|Opera Mini|Mobile/i.test(ua);
+  const coarsePointer = window.matchMedia("(pointer: coarse)").matches;
+  const narrowViewport = window.matchMedia("(max-width: 920px)").matches;
+  return mobileUa || (coarsePointer && narrowViewport);
+}
+
+function applyMobileBrowserMode() {
+  document.body.classList.toggle("mobile-browser", isLikelyMobileBrowser());
+}
+
 function formatNumber(value) {
   if (!Number.isFinite(value)) {
     return "0";
@@ -1209,10 +1221,13 @@ function wireEvents() {
   }
 
   window.addEventListener("beforeunload", saveGame);
+  window.addEventListener("resize", applyMobileBrowserMode);
+  window.addEventListener("orientationchange", applyMobileBrowserMode);
   setInterval(saveGame, AUTO_SAVE_MS);
 }
 
 function boot() {
+  applyMobileBrowserMode();
   initState();
   const offlineResult = loadGame();
   recalcEconomy();

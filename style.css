@@ -452,6 +452,85 @@ button.danger:hover {
   flex-shrink: 0;
 }
 
+body.mobile-browser .wrapper {
+  padding: 12px;
+}
+
+body.mobile-browser .topbar {
+  padding: 14px 12px;
+}
+
+body.mobile-browser .topbar h1 {
+  font-size: 2.05rem;
+}
+
+body.mobile-browser .game-grid {
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+body.mobile-browser .panel {
+  padding: 12px;
+}
+
+body.mobile-browser .panel::before {
+  inset: 6px;
+}
+
+body.mobile-browser button,
+body.mobile-browser .primary-button {
+  min-height: 44px;
+  padding: 10px 12px;
+  font-size: 0.95rem;
+}
+
+body.mobile-browser .save-buttons {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+body.mobile-browser #saveData {
+  min-height: 100px;
+}
+
+body.mobile-browser .buy-mode-controls {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+body.mobile-browser .item-header {
+  align-items: flex-start;
+}
+
+body.mobile-browser .item-side-meta {
+  font-size: 0.84rem;
+}
+
+body.mobile-browser .upgrade-track {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+  overflow-x: visible;
+}
+
+body.mobile-browser .tech-node {
+  min-width: 0;
+}
+
+body.mobile-browser .tech-node:not(:last-child)::after {
+  display: none;
+}
+
+body.mobile-browser .analytics-card canvas {
+  height: 150px;
+}
+
+body.mobile-browser #incomePieChart {
+  height: 190px;
+}
+
+body.mobile-browser .chart-legend-row {
+  font-size: 0.8rem;
+}
+
 @media (max-width: 920px) {
   .game-grid {
     grid-template-columns: 1fr;
