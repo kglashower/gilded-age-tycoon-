@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gilded Age Tycoon</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="wrapper">
+    <header class="topbar">
+      <h1>Gilded Age Tycoon</h1>
+      <p>Build an empire in the 1890s.</p>
+    </header>
+
+    <main class="game-grid">
+      <section class="panel left-panel">
+        <h2>Ledger</h2>
+        <div class="stats">
+          <div class="stat-row">
+            <span>Cash</span>
+            <strong id="cashValue">$0</strong>
+          </div>
+          <div class="stat-row">
+            <span>Income / sec</span>
+            <strong id="incomeValue">$0</strong>
+          </div>
+          <div class="stat-row">
+            <span>Net Worth</span>
+            <strong id="netWorthValue">$0</strong>
+          </div>
+        </div>
+
+        <button id="earnButton" class="primary-button">Collect Revenue</button>
+        <p class="button-note">Each click earns <span id="clickValue">$1</span>.</p>
+        <p id="awayNotice" class="away-notice hidden"></p>
+
+        <div class="prestige-tools">
+          <h3>Incorporation</h3>
+          <div class="stats">
+            <div class="stat-row">
+              <span>Influence</span>
+              <strong id="influenceValue">0</strong>
+            </div>
+            <div class="stat-row">
+              <span>Lifetime Earnings</span>
+              <strong id="lifetimeValue">$0</strong>
+            </div>
+            <div class="stat-row">
+              <span>Permanent Bonus</span>
+              <strong id="prestigeBonusValue">+0%</strong>
+            </div>
+          </div>
+          <p class="button-note" id="incorporateThresholdText">Reach $1M cash to Incorporate.</p>
+          <p class="button-note">Influence gain now: <span id="incorporateGain">+0</span></p>
+          <button id="incorporateButton">Incorporate</button>
+        </div>
+
+        <div class="save-tools">
+          <h3>Save Tools</h3>
+          <div class="save-buttons">
+            <button id="exportButton">Export Save</button>
+            <button id="importButton">Import Save</button>
+            <button id="resetButton" class="danger">Reset Save</button>
+          </div>
+          <textarea id="saveData" rows="6" placeholder="Save data JSON appears here for export, or paste JSON here for import."></textarea>
+        </div>
+      </section>
+
+      <section class="panel right-panel">
+        <div class="list-section">
+          <h2>Businesses</h2>
+          <div id="buyModeControls" class="buy-mode-controls">
+            <button data-buy-mode="1" class="buy-mode-button active">1x</button>
+            <button data-buy-mode="10" class="buy-mode-button">10x</button>
+            <button data-buy-mode="100" class="buy-mode-button">100x</button>
+            <button data-buy-mode="max" class="buy-mode-button">Max</button>
+          </div>
+          <div id="businessList" class="list"></div>
+        </div>
+
+        <div class="list-section">
+          <h2>Upgrades</h2>
+          <div id="upgradeList" class="list"></div>
+        </div>
+
+        <div class="list-section">
+          <h2>Analytics</h2>
+          <div class="analytics-grid">
+            <section class="analytics-card">
+              <h3>Income Rate (10 min)</h3>
+              <canvas id="incomeLineChart" width="600" height="240"></canvas>
+            </section>
+            <section class="analytics-card">
+              <h3>Income Allocation</h3>
+              <canvas id="incomePieChart" width="420" height="280"></canvas>
+              <div id="incomeAllocationLegend" class="chart-legend"></div>
+            </section>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
