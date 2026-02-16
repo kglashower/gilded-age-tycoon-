@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Newsstand">
+  <rect width="64" height="64" rx="8" fill="#efe1c7"/>
+  <rect x="8" y="10" width="48" height="44" rx="4" fill="#b48b45"/>
+  <rect x="12" y="16" width="40" height="12" fill="#f6ecd8"/>
+  <rect x="12" y="32" width="40" height="16" fill="#7f5d2f"/>
+  <text x="32" y="25" text-anchor="middle" font-family="Georgia,serif" font-size="8" fill="#4a3419">GAZETTE</text>
+  <rect x="16" y="36" width="10" height="8" fill="#dbc39a"/>
+  <rect x="28" y="36" width="10" height="8" fill="#dbc39a"/>
+  <rect x="40" y="36" width="10" height="8" fill="#dbc39a"/>
+</svg>

@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Steelworks">
+  <rect width="64" height="64" rx="8" fill="#efe1c7"/>
+  <rect x="8" y="24" width="48" height="30" fill="#6f5737"/>
+  <rect x="12" y="12" width="14" height="20" fill="#85673f"/>
+  <rect x="30" y="10" width="14" height="22" fill="#85673f"/>
+  <rect x="48" y="14" width="8" height="18" fill="#85673f"/>
+  <path d="M17 9c3-4 7-4 10 0" stroke="#d2b178" stroke-width="3" fill="none"/>
+  <path d="M35 7c3-4 7-4 10 0" stroke="#d2b178" stroke-width="3" fill="none"/>
+  <circle cx="30" cy="42" r="6" fill="#d49a44"/>
+  <circle cx="30" cy="42" r="3" fill="#f2c77f"/>
+</svg>

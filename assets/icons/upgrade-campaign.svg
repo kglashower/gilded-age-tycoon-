@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Citywide Campaign">
+  <rect width="64" height="64" rx="8" fill="#f0e4ce"/>
+  <rect x="8" y="14" width="48" height="36" fill="#8c6936"/>
+  <rect x="12" y="18" width="40" height="28" fill="#f3e4c8"/>
+  <text x="32" y="31" text-anchor="middle" font-family="Georgia,serif" font-size="8" fill="#5b4221">CITYWIDE</text>
+  <text x="32" y="39" text-anchor="middle" font-family="Georgia,serif" font-size="8" fill="#5b4221">CAMPAIGN</text>
+  <circle cx="18" cy="50" r="2" fill="#6c4d27"/>
+  <circle cx="32" cy="50" r="2" fill="#6c4d27"/>
+  <circle cx="46" cy="50" r="2" fill="#6c4d27"/>
+</svg>
