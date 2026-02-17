@@ -10,6 +10,14 @@ const BUY_MODES = ["1", "10", "100", "max"];
 const ANALYTICS_SAMPLE_SECONDS = 1;
 const ANALYTICS_MAX_POINTS = 600;
 const ANALYTICS_DRAW_INTERVAL_MS = 250;
+const MOBILE_FLOW_ORDER = [
+  "ledgerSection",
+  "businessesSection",
+  "upgradesSection",
+  "incorporationSection",
+  "analyticsSection",
+  "saveToolsSection"
+];
 const BUSINESS_COLORS = {
   newsstand: "#6f4e2a",
   textile: "#90703f",
@@ -160,6 +168,14 @@ const els = {
   incorporateThresholdText: document.getElementById("incorporateThresholdText"),
   incorporateGain: document.getElementById("incorporateGain"),
   incorporateButton: document.getElementById("incorporateButton"),
+  leftPanel: document.querySelector(".left-panel"),
+  rightPanel: document.querySelector(".right-panel"),
+  ledgerSection: document.getElementById("ledgerSection"),
+  businessesSection: document.getElementById("businessesSection"),
+  upgradesSection: document.getElementById("upgradesSection"),
+  incorporationSection: document.getElementById("incorporationSection"),
+  analyticsSection: document.getElementById("analyticsSection"),
+  saveToolsSection: document.getElementById("saveToolsSection"),
   earnButton: document.getElementById("earnButton"),
   businessList: document.getElementById("businessList"),
   upgradeList: document.getElementById("upgradeList"),
@@ -177,7 +193,9 @@ const els = {
 const ui = {
   businessCards: {},
   upgradeCards: {},
-  upgradeBranches: {}
+  upgradeBranches: {},
+  mobileFlowApplied: false,
+  desktopFlowAnchors: {}
 };
 
 function isLikelyMobileBrowser() {
@@ -189,7 +207,66 @@ function isLikelyMobileBrowser() {
 }
 
 function applyMobileBrowserMode() {
-  document.body.classList.toggle("mobile-browser", isLikelyMobileBrowser());
+  const isMobile = isLikelyMobileBrowser();
+  document.body.classList.toggle("mobile-browser", isMobile);
+  if (isMobile) {
+    applyMobileFlowOrder();
+  } else {
+    restoreDesktopFlowOrder();
+  }
+}
+
+function captureDesktopFlowAnchors() {
+  if (Object.keys(ui.desktopFlowAnchors).length > 0) {
+    return;
+  }
+
+  for (const sectionId of MOBILE_FLOW_ORDER) {
+    const section = els[sectionId];
+    if (!section || !section.parentElement) {
+      continue;
+    }
+    ui.desktopFlowAnchors[sectionId] = {
+      parent: section.parentElement,
+      nextSibling: section.nextSibling
+    };
+  }
+}
+
+function applyMobileFlowOrder() {
+  if (ui.mobileFlowApplied || !els.leftPanel) {
+    return;
+  }
+
+  for (const sectionId of MOBILE_FLOW_ORDER) {
+    const section = els[sectionId];
+    if (section) {
+      els.leftPanel.appendChild(section);
+    }
+  }
+  ui.mobileFlowApplied = true;
+}
+
+function restoreDesktopFlowOrder() {
+  if (!ui.mobileFlowApplied) {
+    return;
+  }
+
+  for (const sectionId of MOBILE_FLOW_ORDER) {
+    const section = els[sectionId];
+    const anchor = ui.desktopFlowAnchors[sectionId];
+    if (!section || !anchor || !anchor.parent) {
+      continue;
+    }
+
+    if (anchor.nextSibling && anchor.nextSibling.parentNode === anchor.parent) {
+      anchor.parent.insertBefore(section, anchor.nextSibling);
+    } else {
+      anchor.parent.appendChild(section);
+    }
+  }
+
+  ui.mobileFlowApplied = false;
 }
 
 function formatNumber(value) {
@@ -1227,6 +1304,7 @@ function wireEvents() {
 }
 
 function boot() {
+  captureDesktopFlowAnchors();
   applyMobileBrowserMode();
   initState();
   const offlineResult = loadGame();

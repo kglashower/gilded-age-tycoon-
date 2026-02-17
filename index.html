@@ -15,27 +15,29 @@
 
     <main class="game-grid">
       <section class="panel left-panel">
-        <h2>Ledger</h2>
-        <div class="stats">
-          <div class="stat-row">
-            <span>Cash</span>
-            <strong id="cashValue">$0</strong>
+        <div id="ledgerSection" class="list-section">
+          <h2>Ledger</h2>
+          <div class="stats">
+            <div class="stat-row">
+              <span>Cash</span>
+              <strong id="cashValue">$0</strong>
+            </div>
+            <div class="stat-row">
+              <span>Income / sec</span>
+              <strong id="incomeValue">$0</strong>
+            </div>
+            <div class="stat-row">
+              <span>Net Worth</span>
+              <strong id="netWorthValue">$0</strong>
+            </div>
           </div>
-          <div class="stat-row">
-            <span>Income / sec</span>
-            <strong id="incomeValue">$0</strong>
-          </div>
-          <div class="stat-row">
-            <span>Net Worth</span>
-            <strong id="netWorthValue">$0</strong>
-          </div>
+
+          <button id="earnButton" class="primary-button">Collect Revenue</button>
+          <p class="button-note">Each click earns <span id="clickValue">$1</span>.</p>
+          <p id="awayNotice" class="away-notice hidden"></p>
         </div>
 
-        <button id="earnButton" class="primary-button">Collect Revenue</button>
-        <p class="button-note">Each click earns <span id="clickValue">$1</span>.</p>
-        <p id="awayNotice" class="away-notice hidden"></p>
-
-        <div class="prestige-tools">
+        <div id="incorporationSection" class="prestige-tools">
           <h3>Incorporation</h3>
           <div class="stats">
             <div class="stat-row">
@@ -56,7 +58,7 @@
           <button id="incorporateButton">Incorporate</button>
         </div>
 
-        <div class="save-tools">
+        <div id="saveToolsSection" class="save-tools">
           <h3>Save Tools</h3>
           <div class="save-buttons">
             <button id="exportButton">Export Save</button>
@@ -68,7 +70,7 @@
       </section>
 
       <section class="panel right-panel">
-        <div class="list-section">
+        <div id="businessesSection" class="list-section">
           <h2>Businesses</h2>
           <div id="buyModeControls" class="buy-mode-controls">
             <button data-buy-mode="1" class="buy-mode-button active">1x</button>
@@ -79,12 +81,12 @@
           <div id="businessList" class="list"></div>
         </div>
 
-        <div class="list-section">
+        <div id="upgradesSection" class="list-section">
           <h2>Upgrades</h2>
           <div id="upgradeList" class="list"></div>
         </div>
 
-        <div class="list-section">
+        <div id="analyticsSection" class="list-section">
           <h2>Analytics</h2>
           <div class="analytics-grid">
             <section class="analytics-card">

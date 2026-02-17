@@ -469,6 +469,10 @@ body.mobile-browser .game-grid {
   gap: 12px;
 }
 
+body.mobile-browser .right-panel {
+  display: none;
+}
+
 body.mobile-browser .panel {
   padding: 12px;
 }
