@@ -188,6 +188,8 @@ const els = {
   incomeLineChart: document.getElementById("incomeLineChart"),
   incomePieChart: document.getElementById("incomePieChart"),
   incomeAllocationLegend: document.getElementById("incomeAllocationLegend")
+  ,
+  floatingCash: document.getElementById("floatingCash")
 };
 
 const ui = {
@@ -195,7 +197,9 @@ const ui = {
   upgradeCards: {},
   upgradeBranches: {},
   mobileFlowApplied: false,
-  desktopFlowAnchors: {}
+  desktopFlowAnchors: {},
+  ledgerInView: true,
+  ledgerObserver: null
 };
 
 function isLikelyMobileBrowser() {
@@ -214,6 +218,34 @@ function applyMobileBrowserMode() {
   } else {
     restoreDesktopFlowOrder();
   }
+  updateFloatingCashVisibility();
+}
+
+function setupLedgerVisibilityObserver() {
+  if (!els.ledgerSection || ui.ledgerObserver || typeof IntersectionObserver === "undefined") {
+    return;
+  }
+
+  ui.ledgerObserver = new IntersectionObserver(
+    (entries) => {
+      const entry = entries[0];
+      ui.ledgerInView = Boolean(entry?.isIntersecting);
+      updateFloatingCashVisibility();
+    },
+    { threshold: 0.1 }
+  );
+
+  ui.ledgerObserver.observe(els.ledgerSection);
+}
+
+function updateFloatingCashVisibility() {
+  if (!els.floatingCash) {
+    return;
+  }
+
+  const isMobile = document.body.classList.contains("mobile-browser");
+  const shouldShow = isMobile && !ui.ledgerInView;
+  els.floatingCash.classList.toggle("hidden", !shouldShow);
 }
 
 function captureDesktopFlowAnchors() {
@@ -1042,6 +1074,9 @@ function renderAnalytics(now) {
 
 function render() {
   els.cashValue.textContent = formatMoney(state.cash);
+  if (els.floatingCash) {
+    els.floatingCash.textContent = `Cash: ${formatMoney(state.cash)}`;
+  }
   els.incomeValue.textContent = `${formatMoney(state.incomePerSec)}`;
   els.netWorthValue.textContent = formatMoney(state.netWorth);
   els.clickValue.textContent = formatMoney(getEffectiveClickPower());
@@ -1300,11 +1335,13 @@ function wireEvents() {
   window.addEventListener("beforeunload", saveGame);
   window.addEventListener("resize", applyMobileBrowserMode);
   window.addEventListener("orientationchange", applyMobileBrowserMode);
+  window.addEventListener("scroll", updateFloatingCashVisibility, { passive: true });
   setInterval(saveGame, AUTO_SAVE_MS);
 }
 
 function boot() {
   captureDesktopFlowAnchors();
+  setupLedgerVisibilityObserver();
   applyMobileBrowserMode();
   initState();
   const offlineResult = loadGame();
