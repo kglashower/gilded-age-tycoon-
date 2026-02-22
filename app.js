@@ -24,8 +24,15 @@ const BUSINESS_COLORS = {
   steel: "#5e676d",
   rail: "#8a5f2a",
   oil: "#2e2e2e",
-  bank: "#b08a3c"
+  bank: "#b08a3c",
+  aether_foundry: "#8e5a2a",
+  automata_works: "#6a6775",
+  zeppelin_dock: "#7a5735",
+  tesla_exchange: "#4c6f7f",
+  chronometer_vault: "#9e7a3b"
 };
+const STEAMPUNK_SECRET_UPGRADE_ID = "aether_key_protocol";
+const STEAMPUNK_UNLOCK_UPGRADE_COUNT = 26;
 
 const BUSINESS_DEFS = [
   { id: "newsstand", name: "Newsstand", basePrice: 12, baseIncome: 0.14, icon: "assets/icons/newsstand.svg" },
@@ -33,8 +40,51 @@ const BUSINESS_DEFS = [
   { id: "steel", name: "Steelworks", basePrice: 720, baseIncome: 7.2, icon: "assets/icons/steel.svg" },
   { id: "rail", name: "Rail Line", basePrice: 5200, baseIncome: 52, icon: "assets/icons/rail.svg" },
   { id: "oil", name: "Oil Refinery", basePrice: 36000, baseIncome: 300, icon: "assets/icons/oil.svg" },
-  { id: "bank", name: "Bank/Trust", basePrice: 220000, baseIncome: 1850, icon: "assets/icons/bank.svg" }
+  { id: "bank", name: "Bank/Trust", basePrice: 220000, baseIncome: 1850, icon: "assets/icons/bank.svg" },
+  {
+    id: "aether_foundry",
+    name: "Aether Foundry",
+    basePrice: 4200000,
+    baseIncome: 42000,
+    icon: "assets/icons/aether_foundry.svg",
+    unlockByUpgrade: STEAMPUNK_SECRET_UPGRADE_ID
+  },
+  {
+    id: "automata_works",
+    name: "Clockwork Automata Works",
+    basePrice: 29000000,
+    baseIncome: 290000,
+    icon: "assets/icons/clockwork_automata.svg",
+    unlockByUpgrade: STEAMPUNK_SECRET_UPGRADE_ID
+  },
+  {
+    id: "zeppelin_dock",
+    name: "Zeppelin Dockyard",
+    basePrice: 210000000,
+    baseIncome: 2200000,
+    icon: "assets/icons/zeppelin_dock.svg",
+    unlockByUpgrade: STEAMPUNK_SECRET_UPGRADE_ID
+  },
+  {
+    id: "tesla_exchange",
+    name: "Tesla Exchange",
+    basePrice: 1500000000,
+    baseIncome: 16000000,
+    icon: "assets/icons/tesla_exchange.svg",
+    unlockByUpgrade: STEAMPUNK_SECRET_UPGRADE_ID
+  },
+  {
+    id: "chronometer_vault",
+    name: "Chronometer Vault",
+    basePrice: 11000000000,
+    baseIncome: 115000000,
+    icon: "assets/icons/chronometer_vault.svg",
+    unlockByUpgrade: STEAMPUNK_SECRET_UPGRADE_ID
+  }
 ];
+
+const BASE_BUSINESS_IDS = ["newsstand", "textile", "steel", "rail", "oil", "bank"];
+const STEAMPUNK_BUSINESS_IDS = ["aether_foundry", "automata_works", "zeppelin_dock", "tesla_exchange", "chronometer_vault"];
 
 const TECH_TREE_TIER_DEFS = [
   { key: "mechanization", name: "Mechanized Works", threshold: 5, multiplier: 1.35, costFactor: 14 },
@@ -89,15 +139,63 @@ const BUSINESS_UPGRADE_NAMES = {
   ]
 };
 
-function createBusinessTechTreeUpgrades() {
-  const upgrades = [];
+const STEAMPUNK_TIER_DEFS = [
+  { key: "boilers", threshold: 4, multiplier: 2.2, costFactor: 24 },
+  { key: "aether", threshold: 10, multiplier: 2.9, costFactor: 120 },
+  { key: "servo", threshold: 18, multiplier: 3.6, costFactor: 560 },
+  { key: "storm", threshold: 28, multiplier: 4.5, costFactor: 2400 },
+  { key: "apex", threshold: 40, multiplier: 5.8, costFactor: 9800 }
+];
 
-  for (const business of BUSINESS_DEFS) {
-    for (let tierIndex = 0; tierIndex < TECH_TREE_TIER_DEFS.length; tierIndex += 1) {
-      const tier = TECH_TREE_TIER_DEFS[tierIndex];
-      const previousTier = TECH_TREE_TIER_DEFS[tierIndex - 1];
-      const businessTierNames = BUSINESS_UPGRADE_NAMES[business.id] || [];
-      const tierName = businessTierNames[tierIndex] || `${business.name} ${tier.name}`;
+const STEAMPUNK_UPGRADE_NAMES = {
+  aether_foundry: [
+    "Brass Boiler Arrays",
+    "Aether Condenser Cores",
+    "Pressure Valve Lattices",
+    "Sky-Furnace Overclock",
+    "Imperial Ether Reactor"
+  ],
+  automata_works: [
+    "Self-Winding Gear Rigs",
+    "Servo Brain Matrices",
+    "Pneumatic Chassis Line",
+    "Autonomous Assembly Hall",
+    "Grand Automaton Directorate"
+  ],
+  zeppelin_dock: [
+    "Hydrogen Lift Chambers",
+    "Rivet-Crane Carousels",
+    "Storm-Route Navigation",
+    "Armored Hull Shipyard",
+    "Aerial Armada Bureau"
+  ],
+  tesla_exchange: [
+    "Arc Relay Exchanges",
+    "Copper Coil Floors",
+    "Dynastic Current Market",
+    "Voltaic Derivatives Desk",
+    "Thunder Capital Trust"
+  ],
+  chronometer_vault: [
+    "Chrono-Lock Chambers",
+    "Escapement Reserve Grid",
+    "Temporal Bond Engine",
+    "Epoch Arbitration Desk",
+    "Parliament of Time"
+  ]
+};
+
+function createBusinessTechTreeUpgrades(targetBusinessIds, tierDefs, tierNameMap, phase) {
+  const upgrades = [];
+  const targetIdSet = new Set(targetBusinessIds);
+  const targetBusinesses = BUSINESS_DEFS.filter((business) => targetIdSet.has(business.id));
+
+  for (const business of targetBusinesses) {
+    for (let tierIndex = 0; tierIndex < tierDefs.length; tierIndex += 1) {
+      const tier = tierDefs[tierIndex];
+      const previousTier = tierDefs[tierIndex - 1];
+      const businessTierNames = tierNameMap[business.id] || [];
+      const tierName = businessTierNames[tierIndex] || `${business.name} Tier ${tierIndex + 1}`;
       const id = `${business.id}_${tier.key}`;
       const cost = Math.round(business.basePrice * tier.costFactor);
       const roundedMultiplier = Number(tier.multiplier.toFixed(2));
@@ -111,6 +209,7 @@ function createBusinessTechTreeUpgrades() {
         multiplier: roundedMultiplier,
         cost,
         prerequisiteId: previousTier ? `${business.id}_${previousTier.key}` : null,
+        phase,
         icon: business.icon
       });
     }
@@ -119,8 +218,37 @@ function createBusinessTechTreeUpgrades() {
   return upgrades;
 }
 
+const BASE_BUSINESS_UPGRADES = createBusinessTechTreeUpgrades(BASE_BUSINESS_IDS, TECH_TREE_TIER_DEFS, BUSINESS_UPGRADE_NAMES, "base");
+const STEAMPUNK_BUSINESS_UPGRADES = createBusinessTechTreeUpgrades(STEAMPUNK_BUSINESS_IDS, STEAMPUNK_TIER_DEFS, STEAMPUNK_UPGRADE_NAMES, "steampunk");
+const SECRET_GATE_BUSINESS_IDS = ["newsstand", "textile", "steel", "rail", "oil"];
+const INITIAL_26_UPGRADE_IDS = [
+  ...BASE_BUSINESS_UPGRADES
+    .filter((upgrade) => SECRET_GATE_BUSINESS_IDS.includes(upgrade.businessId))
+    .map((upgrade) => upgrade.id),
+  "city_marketing"
+].slice(0, STEAMPUNK_UNLOCK_UPGRADE_COUNT);
+const INITIAL_26_REFERENCE_UPGRADES = [
+  ...BASE_BUSINESS_UPGRADES.filter((upgrade) => INITIAL_26_UPGRADE_IDS.includes(upgrade.id)),
+  { id: "city_marketing", cost: 6000 }
+];
+const INITIAL_26_MAX_COST = INITIAL_26_REFERENCE_UPGRADES.reduce((max, upgrade) => Math.max(max, upgrade.cost), 0);
+const SECRET_STEAMPUNK_UPGRADE = {
+  id: STEAMPUNK_SECRET_UPGRADE_ID,
+  name: "Aether Key Protocol",
+  desc: "Unlock the hidden steampunk industrial tier.",
+  businessId: null,
+  threshold: 0,
+  multiplier: 1,
+  cost: INITIAL_26_MAX_COST * 12,
+  clickUpgrade: false,
+  unlocksSteampunk: true,
+  prerequisiteId: null,
+  phase: "secret",
+  icon: "assets/icons/upgrade-campaign.svg"
+};
+
 const UPGRADE_DEFS = [
-  ...createBusinessTechTreeUpgrades(),
+  ...BASE_BUSINESS_UPGRADES,
   {
     id: "city_marketing",
     name: "Citywide Campaign",
@@ -131,8 +259,11 @@ const UPGRADE_DEFS = [
     cost: 6000,
     clickUpgrade: true,
     prerequisiteId: null,
+    phase: "base",
     icon: "assets/icons/upgrade-campaign.svg"
-  }
+  },
+  SECRET_STEAMPUNK_UPGRADE,
+  ...STEAMPUNK_BUSINESS_UPGRADES
 ];
 const UPGRADE_BY_ID = Object.fromEntries(UPGRADE_DEFS.map((upgrade) => [upgrade.id, upgrade]));
 const SPECIAL_UPGRADES = UPGRADE_DEFS.filter((upgrade) => !upgrade.businessId);
@@ -196,6 +327,8 @@ const ui = {
   businessCards: {},
   upgradeCards: {},
   upgradeBranches: {},
+  businessRenderSignature: "",
+  upgradeRenderSignature: "",
   mobileFlowApplied: false,
   desktopFlowAnchors: {},
   ledgerInView: true,
@@ -299,6 +432,39 @@ function restoreDesktopFlowOrder() {
   }
 
   ui.mobileFlowApplied = false;
+}
+
+function areInitial26UpgradesPurchased() {
+  return INITIAL_26_UPGRADE_IDS.every((upgradeId) => Boolean(state.upgrades[upgradeId]));
+}
+
+function isSteampunkModuleUnlocked() {
+  return Boolean(state.upgrades[STEAMPUNK_SECRET_UPGRADE_ID]);
+}
+
+function isBusinessVisible(def) {
+  if (!def.unlockByUpgrade) {
+    return true;
+  }
+  return Boolean(state.upgrades[def.unlockByUpgrade]);
+}
+
+function getVisibleBusinesses() {
+  return BUSINESS_DEFS.filter((def) => isBusinessVisible(def));
+}
+
+function isUpgradeVisible(upgrade) {
+  if (upgrade.id === STEAMPUNK_SECRET_UPGRADE_ID) {
+    return Boolean(state.upgrades[upgrade.id]) || areInitial26UpgradesPurchased();
+  }
+  if (upgrade.phase === "steampunk") {
+    return isSteampunkModuleUnlocked();
+  }
+  return true;
+}
+
+function getVisibleUpgrades() {
+  return UPGRADE_DEFS.filter((upgrade) => isUpgradeVisible(upgrade));
 }
 
 function formatNumber(value) {
@@ -411,7 +577,7 @@ function getEffectiveClickPower() {
 
 function getIncomeByBusiness() {
   const globalMultiplier = getInfluenceMultiplier();
-  return BUSINESS_DEFS.map((def) => {
+  return getVisibleBusinesses().map((def) => {
     const owned = state.businesses[def.id].owned;
     const multiplier = state.businesses[def.id].multiplier;
     const income = calcBusinessIncome(def, owned, multiplier) * globalMultiplier;
@@ -507,6 +673,9 @@ function isUpgradeUnlocked(upgrade) {
 }
 
 function canBuyBusiness(def) {
+  if (!isBusinessVisible(def)) {
+    return false;
+  }
   const plan = getBusinessPurchasePlan(def);
   return plan.quantity > 0 && state.cash >= plan.totalCost;
 }
@@ -522,7 +691,7 @@ function calcBusinessRoiRatio(def) {
 }
 
 function canBuyUpgrade(upgrade) {
-  if (state.upgrades[upgrade.id]) {
+  if (state.upgrades[upgrade.id] || !isUpgradeVisible(upgrade)) {
     return false;
   }
   return isUpgradeUnlocked(upgrade) && state.cash >= upgrade.cost;
@@ -530,7 +699,7 @@ function canBuyUpgrade(upgrade) {
 
 function buyBusiness(businessId) {
   const def = BUSINESS_DEFS.find((entry) => entry.id === businessId);
-  if (!def) {
+  if (!def || !isBusinessVisible(def)) {
     return;
   }
 
@@ -548,7 +717,7 @@ function buyBusiness(businessId) {
 
 function buyUpgrade(upgradeId) {
   const upgrade = UPGRADE_BY_ID[upgradeId];
-  if (!upgrade || state.upgrades[upgrade.id]) {
+  if (!upgrade || state.upgrades[upgrade.id] || !isUpgradeVisible(upgrade)) {
     return;
   }
 
@@ -561,6 +730,8 @@ function buyUpgrade(upgradeId) {
 
   if (upgrade.clickUpgrade) {
     state.clickPower *= upgrade.multiplier;
+  } else if (upgrade.unlocksSteampunk) {
+    // Unlock-only upgrade; no direct multiplier.
   } else {
     state.businesses[upgrade.businessId].multiplier *= upgrade.multiplier;
   }
@@ -831,23 +1002,35 @@ function updateUpgradeCard(upgrade) {
 }
 
 function renderBusinesses() {
-  if (els.businessList.childElementCount === 0) {
-    for (const def of BUSINESS_DEFS) {
+  const visibleBusinesses = getVisibleBusinesses();
+  const signature = visibleBusinesses.map((def) => def.id).join("|");
+
+  if (signature !== ui.businessRenderSignature) {
+    els.businessList.textContent = "";
+    ui.businessCards = {};
+    for (const def of visibleBusinesses) {
       els.businessList.appendChild(createBusinessCard(def));
     }
+    ui.businessRenderSignature = signature;
   }
 
-  for (const def of BUSINESS_DEFS) {
+  for (const def of visibleBusinesses) {
     updateBusinessCard(def);
   }
 }
 
 function renderUpgrades() {
-  if (els.upgradeList.childElementCount === 0) {
+  const visibleUpgrades = getVisibleUpgrades();
+  const signature = visibleUpgrades.map((upgrade) => upgrade.id).join("|");
+
+  if (signature !== ui.upgradeRenderSignature) {
+    els.upgradeList.textContent = "";
+    ui.upgradeCards = {};
+    ui.upgradeBranches = {};
     els.upgradeList.classList.add("upgrade-tree");
 
-    for (const business of BUSINESS_DEFS) {
-      const upgrades = UPGRADE_DEFS
+    for (const business of getVisibleBusinesses()) {
+      const upgrades = visibleUpgrades
         .filter((upgrade) => upgrade.businessId === business.id)
         .sort((a, b) => a.threshold - b.threshold);
 
@@ -856,13 +1039,16 @@ function renderUpgrades() {
       }
     }
 
-    if (SPECIAL_UPGRADES.length > 0) {
-      const civicUpgrades = [...SPECIAL_UPGRADES].sort((a, b) => a.threshold - b.threshold);
+    const visibleSpecialUpgrades = SPECIAL_UPGRADES.filter((upgrade) => isUpgradeVisible(upgrade));
+    if (visibleSpecialUpgrades.length > 0) {
+      const civicUpgrades = [...visibleSpecialUpgrades].sort((a, b) => a.cost - b.cost);
       els.upgradeList.appendChild(createUpgradeBranch("civic", "Civic Initiatives", "assets/icons/upgrade-campaign.svg", civicUpgrades));
     }
+
+    ui.upgradeRenderSignature = signature;
   }
 
-  for (const upgrade of UPGRADE_DEFS) {
+  for (const upgrade of visibleUpgrades) {
     updateUpgradeCard(upgrade);
   }
 

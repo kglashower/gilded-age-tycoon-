@@ -26,10 +26,14 @@ Then open `http://localhost:8000`.
   - Oil Refinery
   - Bank/Trust
 - Purchase quantity options for businesses: `1x`, `10x`, `100x`, and `Max`.
-- Business prices scale by 15% per purchase.
+- Business prices scale by 13% per purchase.
 - Custom themed icons for each business and each upgrade.
 - Upgrades unlock at ownership thresholds and apply multipliers.
-- Expanded upgrade tech tree: each business has 5 chained upgrades (30 total), each with threshold + prerequisite requirements.
+- Expanded upgrade tech trees: each business branch has 5 chained upgrades with threshold + prerequisite requirements.
+- Secret steampunk module:
+  - After the first 26 baseline upgrades are purchased, a hidden ultra-expensive upgrade appears.
+  - Purchasing it unlocks 5 steampunk businesses and 25 steampunk upgrades.
+  - Steampunk businesses and upgrades are significantly higher-cost and higher-income than the base game.
 - Upgrade panel now renders as a visual tree view grouped by business branch with tier progression cards.
 - Tree branches are collapsed by default to show only the current upgrade and immediate next upgrade; use each branch toggle to expand full history/future tiers.
 - Built-in analytics charts:
