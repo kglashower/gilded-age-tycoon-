@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Tesla Exchange">
+  <rect width="64" height="64" rx="8" fill="#efe1c7"/>
+  <rect x="10" y="18" width="44" height="34" fill="#765634"/>
+  <rect x="16" y="24" width="8" height="18" fill="#e7d2ab"/>
+  <rect x="28" y="24" width="8" height="18" fill="#e7d2ab"/>
+  <rect x="40" y="24" width="8" height="18" fill="#e7d2ab"/>
+  <path d="M32 10l4 8h-3l3 8-8-9h3z" fill="#d3aa67"/>
+</svg>

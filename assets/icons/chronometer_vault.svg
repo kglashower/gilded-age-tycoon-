@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Chronometer Vault">
+  <rect width="64" height="64" rx="8" fill="#efe1c7"/>
+  <rect x="10" y="14" width="44" height="40" rx="4" fill="#6f5130"/>
+  <circle cx="32" cy="34" r="12" fill="#3d2d1a"/>
+  <circle cx="32" cy="34" r="8" fill="#d3b075"/>
+  <path d="M32 34V28M32 34L36 36" stroke="#3d2d1a" stroke-width="2" stroke-linecap="round"/>
+  <rect x="26" y="10" width="12" height="6" fill="#8f6d3c"/>
+</svg>

@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Aether Foundry">
+  <rect width="64" height="64" rx="8" fill="#efe1c7"/>
+  <rect x="8" y="28" width="48" height="24" fill="#6f5130"/>
+  <rect x="12" y="12" width="10" height="20" fill="#8a6739"/>
+  <rect x="26" y="8" width="10" height="24" fill="#8a6739"/>
+  <rect x="40" y="14" width="10" height="18" fill="#8a6739"/>
+  <circle cx="32" cy="42" r="8" fill="#3c2c19"/>
+  <circle cx="32" cy="42" r="4" fill="#d5b074"/>
+  <path d="M14 10c2-3 5-3 7 0M28 6c2-3 5-3 7 0M42 12c2-3 5-3 7 0" stroke="#d7c39f" stroke-width="2" fill="none"/>
+</svg>
