@@ -15,6 +15,15 @@ python3 -m http.server 8000
 
 Then open `http://localhost:8000`.
 
+Note: PWA/offline mode requires serving over `http://localhost` (for local development) or `https` (for deployed builds). It will not work from `file://`.
+
+## iOS Offline PWA
+
+1. Serve the game from `http://localhost` or an `https` URL.
+2. Open the game in Safari on iOS.
+3. Tap Share -> Add to Home Screen.
+4. Launch from the home screen icon for standalone/offline behavior.
+
 ## Features
 
 - Click to earn cash.

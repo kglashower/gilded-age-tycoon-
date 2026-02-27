@@ -335,6 +335,18 @@ const ui = {
   ledgerObserver: null
 };
 
+function registerServiceWorker() {
+  if (!("serviceWorker" in navigator)) {
+    return;
+  }
+
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./service-worker.js").catch((error) => {
+      console.warn("Service worker registration failed:", error);
+    });
+  });
+}
+
 function isLikelyMobileBrowser() {
   const ua = navigator.userAgent || "";
   const mobileUa = /Android|iPhone|iPad|iPod|IEMobile|Opera Mini|Mobile/i.test(ua);
@@ -1547,6 +1559,7 @@ function wireEvents() {
 }
 
 function boot() {
+  registerServiceWorker();
   captureDesktopFlowAnchors();
   setupLedgerVisibilityObserver();
   applyMobileBrowserMode();
