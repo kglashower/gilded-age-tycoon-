@@ -476,7 +476,28 @@ function formatNumber(value) {
     return value.toFixed(abs >= 100 ? 0 : 1).replace(/\.0$/, "");
   }
 
-  const units = ["K", "M", "B", "T", "Qa", "Qi"];
+  const units = [
+    "K",
+    "M",
+    "B",
+    "T",
+    "Qa",
+    "Qi",
+    "Sx",  // 10^21 Sextillion
+    "Sp",  // 10^24 Septillion
+    "Oc",  // 10^27 Octillion
+    "No",  // 10^30 Nonillion
+    "Dc",  // 10^33 Decillion
+    "Ud",  // 10^36 Undecillion
+    "Dd",  // 10^39 Duodecillion
+    "Td",  // 10^42 Tredecillion
+    "Qad", // 10^45 Quattuordecillion
+    "Qid", // 10^48 Quindecillion
+    "Sxd", // 10^51 Sexdecillion
+    "Spd", // 10^54 Septendecillion
+    "Ocd", // 10^57 Octodecillion
+    "Nvd"  // 10^60 Novemdecillion
+  ];
   let scaled = abs;
   let unitIndex = -1;
 
