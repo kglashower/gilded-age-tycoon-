@@ -48,6 +48,9 @@ Note: PWA/offline mode requires serving over `http://localhost` (for local devel
 - Built-in analytics charts:
   - Income rate over time (line chart)
   - Income source allocation by business type (pie chart + legend)
+- Hidden achievements unlock automatically at business ownership milestones (`100`, `1K`, `10K`, ...).
+- Each unlocked business achievement grants a permanent `10%` purchase-price discount for that business type.
+- Achievement discounts persist across Incorporations.
 - Prestige system: at $1,000,000 cash you can **Incorporate**:
   - Resets cash, businesses, and upgrades
   - Grants permanent **Influence** based on cash at incorporation time

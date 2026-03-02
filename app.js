@@ -16,6 +16,7 @@ const MOBILE_FLOW_ORDER = [
   "upgradesSection",
   "incorporationSection",
   "analyticsSection",
+  "achievementsSection",
   "saveToolsSection"
 ];
 const BUSINESS_COLORS = {
@@ -33,6 +34,8 @@ const BUSINESS_COLORS = {
 };
 const STEAMPUNK_SECRET_UPGRADE_ID = "aether_key_protocol";
 const STEAMPUNK_UNLOCK_UPGRADE_COUNT = 26;
+const ACHIEVEMENT_MILESTONES = [100, 1000, 10000, 100000, 1000000];
+const ACHIEVEMENT_DISCOUNT_PER_UNLOCK = 0.1;
 
 const BUSINESS_DEFS = [
   { id: "newsstand", name: "Newsstand", basePrice: 12, baseIncome: 0.14, icon: "assets/icons/newsstand.svg" },
@@ -267,11 +270,25 @@ const UPGRADE_DEFS = [
 ];
 const UPGRADE_BY_ID = Object.fromEntries(UPGRADE_DEFS.map((upgrade) => [upgrade.id, upgrade]));
 const SPECIAL_UPGRADES = UPGRADE_DEFS.filter((upgrade) => !upgrade.businessId);
+const ACHIEVEMENT_DEFS = BUSINESS_DEFS.flatMap((business) =>
+  ACHIEVEMENT_MILESTONES.map((milestone) => ({
+    id: `${business.id}_own_${milestone}`,
+    businessId: business.id,
+    milestone,
+    name: `${business.name} x${formatNumber(milestone)}`,
+    desc: `${business.name} purchase price permanently reduced by 10%.`
+  }))
+);
+const ACHIEVEMENTS_BY_BUSINESS_ID = BUSINESS_DEFS.reduce((map, business) => {
+  map[business.id] = ACHIEVEMENT_DEFS.filter((achievement) => achievement.businessId === business.id);
+  return map;
+}, {});
 
 const state = {
   cash: 0,
   businesses: {},
   upgrades: {},
+  achievements: {},
   clickPower: 1,
   influence: 0,
   incorporations: 0,
@@ -308,6 +325,8 @@ const els = {
   upgradesAvailableBadge: document.getElementById("upgradesAvailableBadge"),
   incorporationSection: document.getElementById("incorporationSection"),
   analyticsSection: document.getElementById("analyticsSection"),
+  achievementsSection: document.getElementById("achievementsSection"),
+  achievementList: document.getElementById("achievementList"),
   saveToolsSection: document.getElementById("saveToolsSection"),
   earnButton: document.getElementById("earnButton"),
   businessList: document.getElementById("businessList"),
@@ -329,8 +348,10 @@ const ui = {
   businessCards: {},
   upgradeCards: {},
   upgradeBranches: {},
+  achievementCards: {},
   businessRenderSignature: "",
   upgradeRenderSignature: "",
+  achievementRenderSignature: "",
   mobileUpgradesCollapsed: true,
   mobileFlowApplied: false,
   desktopFlowAnchors: {},
@@ -509,6 +530,45 @@ function updateUpgradeCollapseUI() {
   els.upgradesToggleButton.textContent = ui.mobileUpgradesCollapsed ? "Show" : "Hide";
 }
 
+function getBusinessAchievementUnlockCount(businessId) {
+  const businessAchievements = ACHIEVEMENTS_BY_BUSINESS_ID[businessId] || [];
+  let count = 0;
+  for (const achievement of businessAchievements) {
+    if (state.achievements[achievement.id]) {
+      count += 1;
+    }
+  }
+  return count;
+}
+
+function getBusinessPriceDiscountFactor(businessId) {
+  const unlockCount = getBusinessAchievementUnlockCount(businessId);
+  return Math.pow(1 - ACHIEVEMENT_DISCOUNT_PER_UNLOCK, unlockCount);
+}
+
+function refreshAchievementUnlocks() {
+  if (!state.businesses || Object.keys(state.businesses).length === 0) {
+    return false;
+  }
+
+  let changed = false;
+  for (const achievement of ACHIEVEMENT_DEFS) {
+    if (state.achievements[achievement.id]) {
+      continue;
+    }
+    const owned = state.businesses[achievement.businessId]?.owned || 0;
+    if (owned >= achievement.milestone) {
+      state.achievements[achievement.id] = true;
+      changed = true;
+    }
+  }
+  return changed;
+}
+
+function getUnlockedAchievements() {
+  return ACHIEVEMENT_DEFS.filter((achievement) => Boolean(state.achievements[achievement.id]));
+}
+
 function formatNumber(value) {
   if (!Number.isFinite(value)) {
     return "0";
@@ -571,20 +631,18 @@ function formatRatio(value) {
   return value.toPrecision(2);
 }
 
-function calcBusinessPrice(basePrice, owned) {
-  return basePrice * Math.pow(PRICE_GROWTH, owned);
+function calcBusinessPrice(basePrice, owned, discountFactor = 1) {
+  return basePrice * Math.pow(PRICE_GROWTH, owned) * discountFactor;
 }
 
 function calcBusinessIncome(def, owned, multiplier) {
   return def.baseIncome * owned * multiplier;
 }
 
-function calcBulkBusinessCost(basePrice, owned, quantity) {
+function calcBulkBusinessCost(firstPrice, quantity) {
   if (quantity <= 0) {
     return 0;
   }
-
-  const firstPrice = calcBusinessPrice(basePrice, owned);
   if (PRICE_GROWTH === 1) {
     return firstPrice * quantity;
   }
@@ -592,12 +650,10 @@ function calcBulkBusinessCost(basePrice, owned, quantity) {
   return firstPrice * ((Math.pow(PRICE_GROWTH, quantity) - 1) / (PRICE_GROWTH - 1));
 }
 
-function calcMaxAffordableQuantity(basePrice, owned, cash) {
+function calcMaxAffordableQuantity(firstPrice, cash) {
   if (cash <= 0) {
     return 0;
   }
-
-  const firstPrice = calcBusinessPrice(basePrice, owned);
   if (firstPrice > cash) {
     return 0;
   }
@@ -613,10 +669,12 @@ function calcMaxAffordableQuantity(basePrice, owned, cash) {
 
 function getBusinessPurchasePlan(def, mode = state.buyMode) {
   const owned = state.businesses[def.id].owned;
+  const discountFactor = getBusinessPriceDiscountFactor(def.id);
+  const firstPrice = calcBusinessPrice(def.basePrice, owned, discountFactor);
   let quantity = 0;
 
   if (mode === "max") {
-    quantity = calcMaxAffordableQuantity(def.basePrice, owned, state.cash);
+    quantity = calcMaxAffordableQuantity(firstPrice, state.cash);
   } else {
     quantity = Number.parseInt(mode, 10);
   }
@@ -625,7 +683,7 @@ function getBusinessPurchasePlan(def, mode = state.buyMode) {
     return { quantity: 0, totalCost: 0, modeLabel: mode === "max" ? "Max" : `${mode}x` };
   }
 
-  const totalCost = calcBulkBusinessCost(def.basePrice, owned, quantity);
+  const totalCost = calcBulkBusinessCost(firstPrice, quantity);
   const modeLabel = mode === "max" ? `Max (${quantity}x)` : `${quantity}x`;
   return { quantity, totalCost, modeLabel };
 }
@@ -706,7 +764,7 @@ function recalcEconomy() {
     income += calcBusinessIncome(def, owned, mult) * globalMultiplier;
 
     for (let i = 0; i < owned; i += 1) {
-      assetValue += calcBusinessPrice(def.basePrice, i);
+      assetValue += calcBusinessPrice(def.basePrice, i, getBusinessPriceDiscountFactor(def.id));
     }
   }
 
@@ -748,7 +806,7 @@ function canBuyBusiness(def) {
 
 function calcBusinessRoiRatio(def) {
   const owned = state.businesses[def.id].owned;
-  const nextCost = calcBusinessPrice(def.basePrice, owned);
+  const nextCost = calcBusinessPrice(def.basePrice, owned, getBusinessPriceDiscountFactor(def.id));
   if (nextCost <= 0) {
     return 0;
   }
@@ -779,6 +837,7 @@ function buyBusiness(businessId) {
 
   state.cash -= plan.totalCost;
   state.businesses[businessId].owned += plan.quantity;
+  refreshAchievementUnlocks();
   recalcEconomy();
   saveGame();
   render();
@@ -1126,6 +1185,70 @@ function renderUpgrades() {
   }
 }
 
+function createAchievementCard(achievement) {
+  const business = BUSINESS_DEFS.find((entry) => entry.id === achievement.businessId);
+  const card = document.createElement("div");
+  card.className = "item";
+
+  const header = document.createElement("div");
+  header.className = "item-header";
+
+  const titleWrap = document.createElement("div");
+  titleWrap.className = "item-title-wrap";
+
+  const icon = document.createElement("img");
+  icon.className = "item-icon";
+  icon.src = business?.icon || "assets/icons/upgrade-campaign.svg";
+  icon.alt = `${achievement.name} icon`;
+
+  const title = document.createElement("span");
+  title.className = "item-title";
+  title.textContent = achievement.name;
+
+  titleWrap.appendChild(icon);
+  titleWrap.appendChild(title);
+
+  const status = document.createElement("span");
+  status.className = "item-meta";
+  status.textContent = "Unlocked";
+
+  header.appendChild(titleWrap);
+  header.appendChild(status);
+
+  const description = document.createElement("div");
+  description.className = "item-meta";
+  description.textContent = achievement.desc;
+
+  card.appendChild(header);
+  card.appendChild(description);
+  return card;
+}
+
+function renderAchievements() {
+  if (!els.achievementList || !els.achievementsSection) {
+    return;
+  }
+
+  const unlockedAchievements = getUnlockedAchievements();
+  els.achievementsSection.classList.toggle("hidden", unlockedAchievements.length === 0);
+  const signature = unlockedAchievements.map((achievement) => achievement.id).join("|");
+
+  if (signature === ui.achievementRenderSignature) {
+    return;
+  }
+
+  els.achievementList.textContent = "";
+  ui.achievementCards = {};
+
+  for (const achievement of unlockedAchievements) {
+    const card = createAchievementCard(achievement);
+    els.achievementList.appendChild(card);
+    ui.achievementCards[achievement.id] = card;
+  }
+
+  ui.achievementRenderSignature = signature;
+}
+
 function prepareCanvasContext(canvas) {
   if (!canvas) {
     return null;
@@ -1347,6 +1470,7 @@ function render() {
 
   renderBusinesses();
   renderUpgrades();
+  renderAchievements();
   updateUpgradeCollapseUI();
   renderAnalytics(performance.now());
 }
@@ -1356,6 +1480,7 @@ function toSaveData() {
     cash: state.cash,
     businesses: state.businesses,
     upgrades: state.upgrades,
+    achievements: state.achievements,
     clickPower: state.clickPower,
     influence: state.influence,
     incorporations: state.incorporations,
@@ -1387,6 +1512,13 @@ function applySaveData(data) {
   for (const upgrade of UPGRADE_DEFS) {
     state.upgrades[upgrade.id] = Boolean(data.upgrades?.[upgrade.id]);
   }
+
+  state.achievements = {};
+  for (const achievement of ACHIEVEMENT_DEFS) {
+    state.achievements[achievement.id] = Boolean(data.achievements?.[achievement.id]);
+  }
+  // Backfill achievements for saves from older versions.
+  refreshAchievementUnlocks();
 
   state.clickPower = Number.isFinite(data.clickPower) ? Math.max(0.1, data.clickPower) : 1;
   state.influence = Number.isFinite(data.influence) ? Math.max(0, Math.floor(data.influence)) : 0;
@@ -1480,6 +1612,10 @@ function resetGame() {
   state.influence = 0;
   state.incorporations = 0;
   state.lifetimeEarnings = 0;
+  state.achievements = {};
+  for (const achievement of ACHIEVEMENT_DEFS) {
+    state.achievements[achievement.id] = false;
+  }
   state.buyMode = "1";
   state.lastSavedAt = Date.now();
 
@@ -1558,6 +1694,10 @@ function initState() {
 
   for (const upgrade of UPGRADE_DEFS) {
     state.upgrades[upgrade.id] = false;
+  }
+
+  for (const achievement of ACHIEVEMENT_DEFS) {
+    state.achievements[achievement.id] = false;
   }
 }
 
