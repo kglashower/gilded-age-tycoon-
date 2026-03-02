@@ -331,7 +331,7 @@ const ui = {
   upgradeBranches: {},
   businessRenderSignature: "",
   upgradeRenderSignature: "",
-  mobileUpgradesCollapsed: false,
+  mobileUpgradesCollapsed: true,
   mobileFlowApplied: false,
   desktopFlowAnchors: {},
   ledgerInView: true,
@@ -365,7 +365,6 @@ function applyMobileBrowserMode() {
     applyMobileFlowOrder();
   } else {
     restoreDesktopFlowOrder();
-    ui.mobileUpgradesCollapsed = false;
   }
   updateFloatingCashVisibility();
   updateUpgradeCollapseUI();
@@ -1570,10 +1569,8 @@ function wireEvents() {
   });
   els.incorporateButton.addEventListener("click", incorporate);
   if (els.upgradesToggleButton) {
-    els.upgradesToggleButton.addEventListener("click", () => {
-      if (!document.body.classList.contains("mobile-browser")) {
-        return;
-      }
+    els.upgradesToggleButton.addEventListener("click", (event) => {
+      event.preventDefault();
       ui.mobileUpgradesCollapsed = !ui.mobileUpgradesCollapsed;
       updateUpgradeCollapseUI();
     });

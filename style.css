@@ -557,7 +557,7 @@ body.mobile-browser .upgrades-toggle-button {
 }
 
 body.mobile-browser #upgradesSection.upgrades-collapsed #upgradeList {
-  display: none;
+  display: none !important;
 }
 
 body.mobile-browser #upgradesSection.upgrades-collapsed .upgrades-available-badge {
