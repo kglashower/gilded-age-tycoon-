@@ -484,6 +484,9 @@ function getVisibleUpgrades() {
 }
 
 function countAvailableUpgrades() {
+  if (!state.businesses || Object.keys(state.businesses).length === 0) {
+    return 0;
+  }
   return getVisibleUpgrades().filter((upgrade) => canBuyUpgrade(upgrade)).length;
 }
 
@@ -712,13 +715,16 @@ function recalcEconomy() {
 }
 
 function getUnlockCountForUpgrade(upgrade) {
+  if (!state.businesses || Object.keys(state.businesses).length === 0) {
+    return 0;
+  }
   if (upgrade.clickUpgrade) {
-    return state.businesses.newsstand.owned;
+    return state.businesses.newsstand?.owned || 0;
   }
   if (!upgrade.businessId) {
     return 0;
   }
-  return state.businesses[upgrade.businessId].owned;
+  return state.businesses[upgrade.businessId]?.owned || 0;
 }
 
 function hasUpgradePrerequisite(upgrade) {
@@ -751,6 +757,9 @@ function calcBusinessRoiRatio(def) {
 }
 
 function canBuyUpgrade(upgrade) {
+  if (!state.businesses || Object.keys(state.businesses).length === 0) {
+    return false;
+  }
   if (state.upgrades[upgrade.id] || !isUpgradeVisible(upgrade)) {
     return false;
   }
