@@ -729,8 +729,9 @@ function calcInfluenceGain() {
     return 0;
   }
 
-  // At threshold the player gains 1 influence; gains scale upward with excess cash.
-  return Math.max(1, Math.floor(Math.sqrt(state.cash / threshold)));
+  // Logarithmic scaling by cash on hand relative to current incorporation threshold.
+  const ratio = state.cash / threshold;
+  return Math.max(1, Math.floor(Math.log10(ratio) * 5) + 1);
 }
 
 function canIncorporate() {
