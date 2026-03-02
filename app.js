@@ -304,6 +304,8 @@ const els = {
   ledgerSection: document.getElementById("ledgerSection"),
   businessesSection: document.getElementById("businessesSection"),
   upgradesSection: document.getElementById("upgradesSection"),
+  upgradesToggleButton: document.getElementById("upgradesToggleButton"),
+  upgradesAvailableBadge: document.getElementById("upgradesAvailableBadge"),
   incorporationSection: document.getElementById("incorporationSection"),
   analyticsSection: document.getElementById("analyticsSection"),
   saveToolsSection: document.getElementById("saveToolsSection"),
@@ -329,6 +331,7 @@ const ui = {
   upgradeBranches: {},
   businessRenderSignature: "",
   upgradeRenderSignature: "",
+  mobileUpgradesCollapsed: false,
   mobileFlowApplied: false,
   desktopFlowAnchors: {},
   ledgerInView: true,
@@ -362,8 +365,10 @@ function applyMobileBrowserMode() {
     applyMobileFlowOrder();
   } else {
     restoreDesktopFlowOrder();
+    ui.mobileUpgradesCollapsed = false;
   }
   updateFloatingCashVisibility();
+  updateUpgradeCollapseUI();
 }
 
 function setupLedgerVisibilityObserver() {
@@ -477,6 +482,29 @@ function isUpgradeVisible(upgrade) {
 
 function getVisibleUpgrades() {
   return UPGRADE_DEFS.filter((upgrade) => isUpgradeVisible(upgrade));
+}
+
+function countAvailableUpgrades() {
+  return getVisibleUpgrades().filter((upgrade) => canBuyUpgrade(upgrade)).length;
+}
+
+function updateUpgradeCollapseUI() {
+  if (!els.upgradesSection || !els.upgradesToggleButton || !els.upgradesAvailableBadge) {
+    return;
+  }
+
+  const isMobile = document.body.classList.contains("mobile-browser");
+  if (!isMobile) {
+    els.upgradesSection.classList.remove("upgrades-collapsed");
+    els.upgradesToggleButton.textContent = "Hide";
+    els.upgradesAvailableBadge.textContent = "";
+    return;
+  }
+
+  const availableCount = countAvailableUpgrades();
+  els.upgradesAvailableBadge.textContent = `${availableCount} available`;
+  els.upgradesSection.classList.toggle("upgrades-collapsed", ui.mobileUpgradesCollapsed);
+  els.upgradesToggleButton.textContent = ui.mobileUpgradesCollapsed ? "Show" : "Hide";
 }
 
 function formatNumber(value) {
@@ -1311,6 +1339,7 @@ function render() {
 
   renderBusinesses();
   renderUpgrades();
+  updateUpgradeCollapseUI();
   renderAnalytics(performance.now());
 }
 
@@ -1540,6 +1569,15 @@ function wireEvents() {
     }
   });
   els.incorporateButton.addEventListener("click", incorporate);
+  if (els.upgradesToggleButton) {
+    els.upgradesToggleButton.addEventListener("click", () => {
+      if (!document.body.classList.contains("mobile-browser")) {
+        return;
+      }
+      ui.mobileUpgradesCollapsed = !ui.mobileUpgradesCollapsed;
+      updateUpgradeCollapseUI();
+    });
+  }
   for (const button of els.buyModeButtons) {
     button.addEventListener("click", () => {
       const nextMode = button.dataset.buyMode;

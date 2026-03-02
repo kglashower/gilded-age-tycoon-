@@ -121,6 +121,35 @@ h3 {
   font-size: 1.05rem;
 }
 
+.section-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.upgrades-mobile-controls {
+  display: none;
+  align-items: center;
+  gap: 6px;
+}
+
+.upgrades-available-badge {
+  display: none;
+  border: 1px solid #8b6830;
+  background: linear-gradient(180deg, #f4e5c8, #dfc18d);
+  color: #4d3414;
+  padding: 4px 7px;
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+.upgrades-toggle-button {
+  display: none;
+  padding: 6px 8px;
+  font-size: 0.72rem;
+}
+
 .stats {
   border: 1px solid var(--border);
   background:
@@ -517,6 +546,22 @@ body.mobile-browser .buy-mode-controls {
 
 body.mobile-browser .item-header {
   align-items: flex-start;
+}
+
+body.mobile-browser .upgrades-mobile-controls {
+  display: inline-flex;
+}
+
+body.mobile-browser .upgrades-toggle-button {
+  display: inline-block;
+}
+
+body.mobile-browser #upgradesSection.upgrades-collapsed #upgradeList {
+  display: none;
+}
+
+body.mobile-browser #upgradesSection.upgrades-collapsed .upgrades-available-badge {
+  display: inline-block;
 }
 
 body.mobile-browser .item-side-meta {
