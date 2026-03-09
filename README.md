@@ -31,8 +31,12 @@ Note: PWA/offline mode requires serving over `http://localhost` (for local devel
 - Click to earn cash.
 - Passive income from owned businesses.
 - Buy quantity modes: `1x`, `10x`, `100x`, `Max`.
-- Dynamic ROI shown per business card.
-- Business prices scale by 13% per purchase, with permanent discounts from achievements.
+- Dynamic ROI shown per business card using marginal gain from the next purchase.
+- Business prices scale by 13% per purchase.
+- Price reduction systems stack multiplicatively:
+  - Permanent achievement discounts (persist across Incorporation).
+  - Run-based Tier 4/5 upgrade discounts per business branch.
+- Owned businesses gain an efficiency bonus that scales with holdings, helping earlier tiers remain relevant in later stages.
 
 ### Businesses
 
@@ -53,10 +57,15 @@ Note: PWA/offline mode requires serving over `http://localhost` (for local devel
 ### Upgrades
 
 - Tech-tree upgrades with prerequisites (5 tiers per branch).
+- Upgrade pacing rebalanced:
+  - Higher ownership thresholds.
+  - More moderate multipliers.
+  - Higher upgrade cost factors.
 - Visual tree grouped by business.
 - Branches are collapsed by default to show current + next upgrade.
 - On mobile, the entire Upgrades section can be collapsed via Show/Hide button.
 - When collapsed on mobile, an indicator shows how many upgrades are currently available (unlocked + affordable).
+- Tier 4 and Tier 5 upgrades also reduce future purchase cost for that business type.
 
 ### Secret Steampunk Module
 
@@ -65,6 +74,10 @@ Note: PWA/offline mode requires serving over `http://localhost` (for local devel
 - Purchasing it unlocks:
   - 5 steampunk businesses
   - 25 steampunk upgrades (5 per steampunk business)
+- Steampunk progression has been rebalanced to avoid runaway scaling:
+  - Higher base business costs.
+  - Lower income-to-cost efficiency.
+  - Slower, more expensive upgrade ramp.
 
 ### Achievements
 
@@ -82,6 +95,7 @@ Note: PWA/offline mode requires serving over `http://localhost` (for local devel
 - Influence gain scales logarithmically with cash on hand relative to current threshold.
 - Incorporating resets run progression (cash, businesses, upgrades), but keeps long-term progression systems.
 - Influence provides a permanent global income bonus (`+3%` per Influence).
+- Incorporation thresholds continue to scale upward each time.
 
 ### Analytics
 
@@ -104,6 +118,7 @@ Note: PWA/offline mode requires serving over `http://localhost` (for local devel
 ### Save / Data Safety
 
 - Auto-save every 5 seconds and on key actions.
+- Save compatibility includes rebalance fields (business-level run price multipliers are reconstructed from purchased upgrades on load).
 - Save tools:
   - Reset Save
   - Export Save (JSON)
