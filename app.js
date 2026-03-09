@@ -6,6 +6,8 @@ const PRICE_GROWTH = 1.13;
 const PRESTIGE_THRESHOLD = 1000000;
 const INCORPORATION_THRESHOLD_GROWTH = 3;
 const INFLUENCE_BONUS_PER_POINT = 0.03;
+const OWNERSHIP_EFFICIENCY_BONUS = 0.01;
+const MIN_PRICE_MULTIPLIER = 0.05;
 const BUY_MODES = ["1", "10", "100", "max"];
 const ANALYTICS_SAMPLE_SECONDS = 1;
 const ANALYTICS_MAX_POINTS = 600;
@@ -47,40 +49,40 @@ const BUSINESS_DEFS = [
   {
     id: "aether_foundry",
     name: "Aether Foundry",
-    basePrice: 4200000,
-    baseIncome: 42000,
+    basePrice: 8500000,
+    baseIncome: 45000,
     icon: "assets/icons/aether_foundry.svg",
     unlockByUpgrade: STEAMPUNK_SECRET_UPGRADE_ID
   },
   {
     id: "automata_works",
     name: "Clockwork Automata Works",
-    basePrice: 29000000,
-    baseIncome: 290000,
+    basePrice: 65000000,
+    baseIncome: 320000,
     icon: "assets/icons/clockwork_automata.svg",
     unlockByUpgrade: STEAMPUNK_SECRET_UPGRADE_ID
   },
   {
     id: "zeppelin_dock",
     name: "Zeppelin Dockyard",
-    basePrice: 210000000,
-    baseIncome: 2200000,
+    basePrice: 520000000,
+    baseIncome: 2400000,
     icon: "assets/icons/zeppelin_dock.svg",
     unlockByUpgrade: STEAMPUNK_SECRET_UPGRADE_ID
   },
   {
     id: "tesla_exchange",
     name: "Tesla Exchange",
-    basePrice: 1500000000,
-    baseIncome: 16000000,
+    basePrice: 4100000000,
+    baseIncome: 17000000,
     icon: "assets/icons/tesla_exchange.svg",
     unlockByUpgrade: STEAMPUNK_SECRET_UPGRADE_ID
   },
   {
     id: "chronometer_vault",
     name: "Chronometer Vault",
-    basePrice: 11000000000,
-    baseIncome: 115000000,
+    basePrice: 32000000000,
+    baseIncome: 118000000,
     icon: "assets/icons/chronometer_vault.svg",
     unlockByUpgrade: STEAMPUNK_SECRET_UPGRADE_ID
   }
@@ -90,11 +92,11 @@ const BASE_BUSINESS_IDS = ["newsstand", "textile", "steel", "rail", "oil", "bank
 const STEAMPUNK_BUSINESS_IDS = ["aether_foundry", "automata_works", "zeppelin_dock", "tesla_exchange", "chronometer_vault"];
 
 const TECH_TREE_TIER_DEFS = [
-  { key: "mechanization", name: "Mechanized Works", threshold: 5, multiplier: 1.35, costFactor: 14 },
-  { key: "telegraph", name: "Telegraph Dispatch", threshold: 14, multiplier: 1.6, costFactor: 60 },
-  { key: "trusts", name: "Vertical Trust Charters", threshold: 28, multiplier: 1.9, costFactor: 240 },
-  { key: "electrification", name: "Urban Electrification", threshold: 46, multiplier: 2.3, costFactor: 920 },
-  { key: "continental", name: "Continental Syndicate", threshold: 70, multiplier: 2.8, costFactor: 3600 }
+  { key: "mechanization", name: "Mechanized Works", threshold: 10, multiplier: 1.25, costFactor: 20, priceReduction: 0 },
+  { key: "telegraph", name: "Telegraph Dispatch", threshold: 30, multiplier: 1.4, costFactor: 90, priceReduction: 0 },
+  { key: "trusts", name: "Vertical Trust Charters", threshold: 75, multiplier: 1.6, costFactor: 380, priceReduction: 0 },
+  { key: "electrification", name: "Urban Electrification", threshold: 160, multiplier: 1.9, costFactor: 1400, priceReduction: 0.08 },
+  { key: "continental", name: "Continental Syndicate", threshold: 320, multiplier: 2.2, costFactor: 5000, priceReduction: 0.16 }
 ];
 
 const BUSINESS_UPGRADE_NAMES = {
@@ -143,11 +145,11 @@ const BUSINESS_UPGRADE_NAMES = {
 };
 
 const STEAMPUNK_TIER_DEFS = [
-  { key: "boilers", threshold: 4, multiplier: 2.2, costFactor: 24 },
-  { key: "aether", threshold: 10, multiplier: 2.9, costFactor: 120 },
-  { key: "servo", threshold: 18, multiplier: 3.6, costFactor: 560 },
-  { key: "storm", threshold: 28, multiplier: 4.5, costFactor: 2400 },
-  { key: "apex", threshold: 40, multiplier: 5.8, costFactor: 9800 }
+  { key: "boilers", threshold: 8, multiplier: 1.4, costFactor: 60, priceReduction: 0 },
+  { key: "aether", threshold: 22, multiplier: 1.7, costFactor: 260, priceReduction: 0 },
+  { key: "servo", threshold: 50, multiplier: 2.0, costFactor: 1100, priceReduction: 0 },
+  { key: "storm", threshold: 110, multiplier: 2.4, costFactor: 4800, priceReduction: 0.1 },
+  { key: "apex", threshold: 220, multiplier: 2.8, costFactor: 22000, priceReduction: 0.2 }
 ];
 
 const STEAMPUNK_UPGRADE_NAMES = {
@@ -202,14 +204,18 @@ function createBusinessTechTreeUpgrades(targetBusinessIds, tierDefs, tierNameMap
       const id = `${business.id}_${tier.key}`;
       const cost = Math.round(business.basePrice * tier.costFactor);
       const roundedMultiplier = Number(tier.multiplier.toFixed(2));
+      const priceReduction = Number(tier.priceReduction || 0);
+      const reductionPercent = Math.round(priceReduction * 100);
+      const reductionText = reductionPercent > 0 ? ` Future purchase prices drop by ${reductionPercent}%.` : "";
 
       upgrades.push({
         id,
         name: tierName,
-        desc: `${business.name} output is multiplied by ${roundedMultiplier}x.`,
+        desc: `${business.name} output is multiplied by ${roundedMultiplier}x.${reductionText}`,
         businessId: business.id,
         threshold: tier.threshold,
         multiplier: roundedMultiplier,
+        priceReduction,
         cost,
         prerequisiteId: previousTier ? `${business.id}_${previousTier.key}` : null,
         phase,
@@ -546,6 +552,34 @@ function getBusinessPriceDiscountFactor(businessId) {
   return Math.pow(1 - ACHIEVEMENT_DISCOUNT_PER_UNLOCK, unlockCount);
 }
 
+function getBusinessTotalPriceFactor(businessId) {
+  const achievementFactor = getBusinessPriceDiscountFactor(businessId);
+  const upgradePriceMultiplier = state.businesses[businessId]?.priceMultiplier ?? 1;
+  return achievementFactor * upgradePriceMultiplier;
+}
+
+function rebuildBusinessPriceMultipliersFromUpgrades() {
+  for (const def of BUSINESS_DEFS) {
+    if (state.businesses[def.id]) {
+      state.businesses[def.id].priceMultiplier = 1;
+    }
+  }
+
+  for (const upgrade of UPGRADE_DEFS) {
+    if (!upgrade.businessId || !upgrade.priceReduction || !state.upgrades[upgrade.id]) {
+      continue;
+    }
+    const businessState = state.businesses[upgrade.businessId];
+    if (!businessState) {
+      continue;
+    }
+    businessState.priceMultiplier = Math.max(
+      MIN_PRICE_MULTIPLIER,
+      businessState.priceMultiplier * (1 - upgrade.priceReduction)
+    );
+  }
+}
+
 function refreshAchievementUnlocks() {
   if (!state.businesses || Object.keys(state.businesses).length === 0) {
     return false;
@@ -636,7 +670,13 @@ function calcBusinessPrice(basePrice, owned, discountFactor = 1) {
 }
 
 function calcBusinessIncome(def, owned, multiplier) {
-  return def.baseIncome * owned * multiplier;
+  if (owned <= 0) {
+    return 0;
+  }
+
+  // Scale mature businesses upward so lower tiers remain meaningful deeper into a run.
+  const efficiencyScale = 1 + OWNERSHIP_EFFICIENCY_BONUS * Math.sqrt(owned);
+  return def.baseIncome * owned * multiplier * efficiencyScale;
 }
 
 function calcBulkBusinessCost(firstPrice, quantity) {
@@ -669,8 +709,8 @@ function calcMaxAffordableQuantity(firstPrice, cash) {
 
 function getBusinessPurchasePlan(def, mode = state.buyMode) {
   const owned = state.businesses[def.id].owned;
-  const discountFactor = getBusinessPriceDiscountFactor(def.id);
-  const firstPrice = calcBusinessPrice(def.basePrice, owned, discountFactor);
+  const totalFactor = getBusinessTotalPriceFactor(def.id);
+  const firstPrice = calcBusinessPrice(def.basePrice, owned, totalFactor);
   let quantity = 0;
 
   if (mode === "max") {
@@ -746,7 +786,7 @@ function resetRunProgress() {
   state.analytics.sampleAccumulator = 0;
 
   for (const def of BUSINESS_DEFS) {
-    state.businesses[def.id] = { owned: 0, multiplier: 1 };
+    state.businesses[def.id] = { owned: 0, multiplier: 1, priceMultiplier: 1 };
   }
 
   for (const upgrade of UPGRADE_DEFS) {
@@ -765,7 +805,7 @@ function recalcEconomy() {
     income += calcBusinessIncome(def, owned, mult) * globalMultiplier;
 
     for (let i = 0; i < owned; i += 1) {
-      assetValue += calcBusinessPrice(def.basePrice, i, getBusinessPriceDiscountFactor(def.id));
+      assetValue += calcBusinessPrice(def.basePrice, i, getBusinessTotalPriceFactor(def.id));
     }
   }
 
@@ -807,11 +847,15 @@ function canBuyBusiness(def) {
 
 function calcBusinessRoiRatio(def) {
   const owned = state.businesses[def.id].owned;
-  const nextCost = calcBusinessPrice(def.basePrice, owned, getBusinessPriceDiscountFactor(def.id));
+  const nextCost = calcBusinessPrice(def.basePrice, owned, getBusinessTotalPriceFactor(def.id));
   if (nextCost <= 0) {
     return 0;
   }
-  const oneMoreIncome = calcBusinessIncome(def, 1, state.businesses[def.id].multiplier) * getInfluenceMultiplier();
+  const mult = state.businesses[def.id].multiplier;
+  const global = getInfluenceMultiplier();
+  const currentIncome = calcBusinessIncome(def, owned, mult) * global;
+  const nextIncome = calcBusinessIncome(def, owned + 1, mult) * global;
+  const oneMoreIncome = Math.max(0, nextIncome - currentIncome);
   return oneMoreIncome / nextCost;
 }
 
@@ -862,7 +906,14 @@ function buyUpgrade(upgradeId) {
   } else if (upgrade.unlocksSteampunk) {
     // Unlock-only upgrade; no direct multiplier.
   } else {
-    state.businesses[upgrade.businessId].multiplier *= upgrade.multiplier;
+    const businessState = state.businesses[upgrade.businessId];
+    businessState.multiplier *= upgrade.multiplier;
+    if (upgrade.priceReduction > 0) {
+      businessState.priceMultiplier = Math.max(
+        MIN_PRICE_MULTIPLIER,
+        (businessState.priceMultiplier || 1) * (1 - upgrade.priceReduction)
+      );
+    }
   }
 
   recalcEconomy();
@@ -946,7 +997,10 @@ function updateBusinessCard(def) {
   const plan = getBusinessPurchasePlan(def);
   const roi = calcBusinessRoiRatio(def);
   refs.owned.textContent = `Owned: ${current.owned}`;
-  refs.meta.textContent = `Income: ${formatMoney(calcBusinessIncome(def, 1, current.multiplier) * getInfluenceMultiplier())}/sec each`;
+  const currentIncome = calcBusinessIncome(def, current.owned, current.multiplier) * getInfluenceMultiplier();
+  const nextIncome = calcBusinessIncome(def, current.owned + 1, current.multiplier) * getInfluenceMultiplier();
+  const marginalIncome = Math.max(0, nextIncome - currentIncome);
+  refs.meta.textContent = `Income: ${formatMoney(marginalIncome)}/sec next`;
   refs.roiLine.textContent = `ROI: ${formatRatio(roi)} /sec per $`;
   refs.costLine.textContent = `Cost (${plan.modeLabel}): ${formatMoney(plan.totalCost)}`;
   refs.button.textContent = `Purchase ${plan.modeLabel}`;
@@ -1506,13 +1560,14 @@ function applySaveData(data) {
     const incoming = data.businesses?.[def.id];
     const owned = Number.isFinite(incoming?.owned) ? Math.max(0, Math.floor(incoming.owned)) : 0;
     const multiplier = Number.isFinite(incoming?.multiplier) ? Math.max(0.01, incoming.multiplier) : 1;
-    state.businesses[def.id] = { owned, multiplier };
+    state.businesses[def.id] = { owned, multiplier, priceMultiplier: 1 };
   }
 
   state.upgrades = {};
   for (const upgrade of UPGRADE_DEFS) {
     state.upgrades[upgrade.id] = Boolean(data.upgrades?.[upgrade.id]);
   }
+  rebuildBusinessPriceMultipliersFromUpgrades();
 
   state.achievements = {};
   for (const achievement of ACHIEVEMENT_DEFS) {
@@ -1690,7 +1745,7 @@ function tick(now) {
 
 function initState() {
   for (const def of BUSINESS_DEFS) {
-    state.businesses[def.id] = { owned: 0, multiplier: 1 };
+    state.businesses[def.id] = { owned: 0, multiplier: 1, priceMultiplier: 1 };
   }
 
   for (const upgrade of UPGRADE_DEFS) {
