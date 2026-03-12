@@ -32,7 +32,9 @@ Note: PWA/offline mode requires serving over `http://localhost` (for local devel
 - Passive income from owned businesses.
 - Buy quantity modes: `1x`, `10x`, `100x`, `Max`.
 - Dynamic ROI shown per business card using marginal gain from the next purchase.
-- Business prices scale by 13% per purchase.
+- Business prices use a two-phase exponential curve:
+  - Early game (`0-68` owned): `13%` growth per purchase.
+  - Post-softcap (`69+` owned): `6.5%` growth per purchase.
 - Price reduction systems stack multiplicatively:
   - Permanent achievement discounts (persist across Incorporation).
   - Run-based Tier 4/5 upgrade discounts per business branch.
@@ -83,8 +85,8 @@ Note: PWA/offline mode requires serving over `http://localhost` (for local devel
 
 - Achievement panel is hidden until the first achievement is unlocked.
 - Achievements unlock automatically.
-- For each business type, achievements unlock at ownership milestones:
-  - `100`, `1,000`, `10,000`, `100,000`, `1,000,000`
+- For each business type, achievements unlock at doubling milestones starting at `100`:
+  - `100`, `200`, `400`, `800`, `1,600`, ... up to `1,000,000`
 - Each unlocked achievement gives a permanent `10%` purchase-price reduction for that business type.
 - Achievement benefits persist through Incorporations.
 
@@ -132,4 +134,7 @@ Note: PWA/offline mode requires serving over `http://localhost` (for local devel
 
 - Web app manifest and service worker included.
 - Offline-capable when served over `http://localhost` or `https`.
-- iOS Add to Home Screen support with Apple touch icon and standalone mode metadata.
+- Home-screen icon support configured for Android and iOS:
+  - Manifest icons (`192x192`, `512x512`, including maskable purpose).
+  - Apple touch icon (`180x180`) and mobile web app metadata.
+- If icon changes are not visible on iOS, remove the existing home-screen app and add it again (Safari aggressively caches icons/metadata).

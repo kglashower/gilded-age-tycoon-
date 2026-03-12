@@ -3,6 +3,8 @@
 const SAVE_KEY = "gildedAgeTycoonSaveV1";
 const AUTO_SAVE_MS = 5000;
 const PRICE_GROWTH = 1.13;
+const COST_SOFTCAP_OWNED = 68;
+const PRICE_GROWTH_POST_SOFTCAP = 1.065;
 const PRESTIGE_THRESHOLD = 1000000;
 const INCORPORATION_THRESHOLD_GROWTH = 3;
 const INFLUENCE_BONUS_PER_POINT = 0.03;
@@ -36,7 +38,13 @@ const BUSINESS_COLORS = {
 };
 const STEAMPUNK_SECRET_UPGRADE_ID = "aether_key_protocol";
 const STEAMPUNK_UNLOCK_UPGRADE_COUNT = 26;
-const ACHIEVEMENT_MILESTONES = [100, 1000, 10000, 100000, 1000000];
+const ACHIEVEMENT_MILESTONES = (() => {
+  const milestones = [];
+  for (let milestone = 100; milestone <= 1000000; milestone *= 2) {
+    milestones.push(milestone);
+  }
+  return milestones;
+})();
 const ACHIEVEMENT_DISCOUNT_PER_UNLOCK = 0.1;
 
 const BUSINESS_DEFS = [
@@ -666,7 +674,13 @@ function formatRatio(value) {
 }
 
 function calcBusinessPrice(basePrice, owned, discountFactor = 1) {
-  return basePrice * Math.pow(PRICE_GROWTH, owned) * discountFactor;
+  const normalizedOwned = Math.max(0, owned);
+  const earlyOwned = Math.min(normalizedOwned, COST_SOFTCAP_OWNED);
+  const lateOwned = Math.max(0, normalizedOwned - COST_SOFTCAP_OWNED);
+
+  const earlyScale = Math.pow(PRICE_GROWTH, earlyOwned);
+  const lateScale = Math.pow(PRICE_GROWTH_POST_SOFTCAP, lateOwned);
+  return basePrice * earlyScale * lateScale * discountFactor;
 }
 
 function calcBusinessIncome(def, owned, multiplier) {
@@ -679,18 +693,43 @@ function calcBusinessIncome(def, owned, multiplier) {
   return def.baseIncome * owned * multiplier * efficiencyScale;
 }
 
-function calcBulkBusinessCost(firstPrice, quantity) {
+function calcGeometricSeriesCost(firstPrice, growth, quantity) {
   if (quantity <= 0) {
     return 0;
   }
-  if (PRICE_GROWTH === 1) {
+  if (growth === 1) {
     return firstPrice * quantity;
   }
 
-  return firstPrice * ((Math.pow(PRICE_GROWTH, quantity) - 1) / (PRICE_GROWTH - 1));
+  return firstPrice * ((Math.pow(growth, quantity) - 1) / (growth - 1));
 }
 
-function calcMaxAffordableQuantity(firstPrice, cash) {
+function calcBulkBusinessCost(basePrice, startOwned, quantity, discountFactor = 1) {
+  if (quantity <= 0) {
+    return 0;
+  }
+
+  let remaining = quantity;
+  let owned = startOwned;
+  let total = 0;
+
+  if (owned < COST_SOFTCAP_OWNED) {
+    const earlyQuantity = Math.min(remaining, COST_SOFTCAP_OWNED - owned);
+    const earlyFirstPrice = calcBusinessPrice(basePrice, owned, discountFactor);
+    total += calcGeometricSeriesCost(earlyFirstPrice, PRICE_GROWTH, earlyQuantity);
+    owned += earlyQuantity;
+    remaining -= earlyQuantity;
+  }
+
+  if (remaining > 0) {
+    const lateFirstPrice = calcBusinessPrice(basePrice, owned, discountFactor);
+    total += calcGeometricSeriesCost(lateFirstPrice, PRICE_GROWTH_POST_SOFTCAP, remaining);
+  }
+
+  return total;
+}
+
+function calcMaxAffordableInSegment(firstPrice, growth, cash, maxQuantity = Number.POSITIVE_INFINITY) {
   if (cash <= 0) {
     return 0;
   }
@@ -698,23 +737,58 @@ function calcMaxAffordableQuantity(firstPrice, cash) {
     return 0;
   }
 
-  if (PRICE_GROWTH === 1) {
-    return Math.floor(cash / firstPrice);
+  if (growth === 1) {
+    return Math.min(maxQuantity, Math.floor(cash / firstPrice));
   }
 
-  const scaled = (cash * (PRICE_GROWTH - 1)) / firstPrice;
-  const raw = Math.log(1 + scaled) / Math.log(PRICE_GROWTH);
-  return Math.max(0, Math.floor(raw));
+  const scaled = (cash * (growth - 1)) / firstPrice;
+  const raw = Math.log(1 + scaled) / Math.log(growth);
+  return Math.max(0, Math.min(maxQuantity, Math.floor(raw)));
+}
+
+function calcMaxAffordableQuantity(basePrice, startOwned, cash, discountFactor = 1) {
+  if (cash <= 0) {
+    return 0;
+  }
+
+  let remainingCash = cash;
+  let owned = startOwned;
+  let quantity = 0;
+
+  if (owned < COST_SOFTCAP_OWNED) {
+    const maxEarlyQuantity = COST_SOFTCAP_OWNED - owned;
+    const earlyFirstPrice = calcBusinessPrice(basePrice, owned, discountFactor);
+    const affordableEarly = calcMaxAffordableInSegment(
+      earlyFirstPrice,
+      PRICE_GROWTH,
+      remainingCash,
+      maxEarlyQuantity
+    );
+
+    if (affordableEarly > 0) {
+      const earlyCost = calcGeometricSeriesCost(earlyFirstPrice, PRICE_GROWTH, affordableEarly);
+      remainingCash -= earlyCost;
+      owned += affordableEarly;
+      quantity += affordableEarly;
+    }
+
+    if (affordableEarly < maxEarlyQuantity) {
+      return quantity;
+    }
+  }
+
+  const lateFirstPrice = calcBusinessPrice(basePrice, owned, discountFactor);
+  const affordableLate = calcMaxAffordableInSegment(lateFirstPrice, PRICE_GROWTH_POST_SOFTCAP, remainingCash);
+  return quantity + affordableLate;
 }
 
 function getBusinessPurchasePlan(def, mode = state.buyMode) {
   const owned = state.businesses[def.id].owned;
   const totalFactor = getBusinessTotalPriceFactor(def.id);
-  const firstPrice = calcBusinessPrice(def.basePrice, owned, totalFactor);
   let quantity = 0;
 
   if (mode === "max") {
-    quantity = calcMaxAffordableQuantity(firstPrice, state.cash);
+    quantity = calcMaxAffordableQuantity(def.basePrice, owned, state.cash, totalFactor);
   } else {
     quantity = Number.parseInt(mode, 10);
   }
@@ -723,7 +797,7 @@ function getBusinessPurchasePlan(def, mode = state.buyMode) {
     return { quantity: 0, totalCost: 0, modeLabel: mode === "max" ? "Max" : `${mode}x` };
   }
 
-  const totalCost = calcBulkBusinessCost(firstPrice, quantity);
+  const totalCost = calcBulkBusinessCost(def.basePrice, owned, quantity, totalFactor);
   const modeLabel = mode === "max" ? `Max (${quantity}x)` : `${quantity}x`;
   return { quantity, totalCost, modeLabel };
 }
@@ -803,10 +877,7 @@ function recalcEconomy() {
     const owned = state.businesses[def.id].owned;
     const mult = state.businesses[def.id].multiplier;
     income += calcBusinessIncome(def, owned, mult) * globalMultiplier;
-
-    for (let i = 0; i < owned; i += 1) {
-      assetValue += calcBusinessPrice(def.basePrice, i, getBusinessTotalPriceFactor(def.id));
-    }
+    assetValue += calcBulkBusinessCost(def.basePrice, 0, owned, getBusinessTotalPriceFactor(def.id));
   }
 
   state.incomePerSec = income;
@@ -1569,9 +1640,29 @@ function applySaveData(data) {
   }
   rebuildBusinessPriceMultipliersFromUpgrades();
 
+  const maxLegacyMilestoneByBusiness = {};
+  for (const [achievementId, unlocked] of Object.entries(data.achievements || {})) {
+    if (!unlocked) {
+      continue;
+    }
+    const match = achievementId.match(/^(.+)_own_(\d+)$/);
+    if (!match) {
+      continue;
+    }
+    const businessId = match[1];
+    const milestone = Number.parseInt(match[2], 10);
+    if (!BUSINESS_DEFS.some((def) => def.id === businessId) || !Number.isFinite(milestone)) {
+      continue;
+    }
+    const previous = maxLegacyMilestoneByBusiness[businessId] || 0;
+    maxLegacyMilestoneByBusiness[businessId] = Math.max(previous, milestone);
+  }
+
   state.achievements = {};
   for (const achievement of ACHIEVEMENT_DEFS) {
-    state.achievements[achievement.id] = Boolean(data.achievements?.[achievement.id]);
+    const directUnlock = Boolean(data.achievements?.[achievement.id]);
+    const migratedUnlock = (maxLegacyMilestoneByBusiness[achievement.businessId] || 0) >= achievement.milestone;
+    state.achievements[achievement.id] = directUnlock || migratedUnlock;
   }
   // Backfill achievements for saves from older versions.
   refreshAchievementUnlocks();

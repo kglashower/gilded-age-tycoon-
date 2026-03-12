@@ -1,6 +1,6 @@
 "use strict";
 
-const CACHE_VERSION = "gilded-age-tycoon-v1";
+const CACHE_VERSION = "gilded-age-tycoon-v2";
 const CORE_ASSETS = [
   "./",
   "./index.html",
