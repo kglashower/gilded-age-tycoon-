@@ -101,10 +101,10 @@ const STEAMPUNK_BUSINESS_IDS = ["aether_foundry", "automata_works", "zeppelin_do
 
 const TECH_TREE_TIER_DEFS = [
   { key: "mechanization", name: "Mechanized Works", threshold: 10, multiplier: 1.25, costFactor: 20, priceReduction: 0 },
-  { key: "telegraph", name: "Telegraph Dispatch", threshold: 30, multiplier: 1.4, costFactor: 90, priceReduction: 0 },
-  { key: "trusts", name: "Vertical Trust Charters", threshold: 75, multiplier: 1.6, costFactor: 380, priceReduction: 0 },
-  { key: "electrification", name: "Urban Electrification", threshold: 160, multiplier: 1.9, costFactor: 1400, priceReduction: 0.08 },
-  { key: "continental", name: "Continental Syndicate", threshold: 320, multiplier: 2.2, costFactor: 5000, priceReduction: 0.16 }
+  { key: "telegraph", name: "Telegraph Dispatch", threshold: 26, multiplier: 1.4, costFactor: 90, priceReduction: 0 },
+  { key: "trusts", name: "Vertical Trust Charters", threshold: 60, multiplier: 1.6, costFactor: 380, priceReduction: 0 },
+  { key: "electrification", name: "Urban Electrification", threshold: 120, multiplier: 1.9, costFactor: 1400, priceReduction: 0.08 },
+  { key: "continental", name: "Continental Syndicate", threshold: 200, multiplier: 2.2, costFactor: 5000, priceReduction: 0.16 }
 ];
 
 const BUSINESS_UPGRADE_NAMES = {
@@ -154,10 +154,10 @@ const BUSINESS_UPGRADE_NAMES = {
 
 const STEAMPUNK_TIER_DEFS = [
   { key: "boilers", threshold: 8, multiplier: 1.4, costFactor: 60, priceReduction: 0 },
-  { key: "aether", threshold: 22, multiplier: 1.7, costFactor: 260, priceReduction: 0 },
-  { key: "servo", threshold: 50, multiplier: 2.0, costFactor: 1100, priceReduction: 0 },
-  { key: "storm", threshold: 110, multiplier: 2.4, costFactor: 4800, priceReduction: 0.1 },
-  { key: "apex", threshold: 220, multiplier: 2.8, costFactor: 22000, priceReduction: 0.2 }
+  { key: "aether", threshold: 20, multiplier: 1.7, costFactor: 260, priceReduction: 0 },
+  { key: "servo", threshold: 42, multiplier: 2.0, costFactor: 1100, priceReduction: 0 },
+  { key: "storm", threshold: 82, multiplier: 2.4, costFactor: 4800, priceReduction: 0.1 },
+  { key: "apex", threshold: 140, multiplier: 2.8, costFactor: 22000, priceReduction: 0.2 }
 ];
 
 const STEAMPUNK_UPGRADE_NAMES = {
