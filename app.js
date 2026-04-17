@@ -2,6 +2,7 @@
 
 const SAVE_KEY = "gildedAgeTycoonSaveV1";
 const AUTO_SAVE_MS = 5000;
+const SERVICE_WORKER_UPDATE_TIMEOUT_MS = 2500;
 const PRICE_GROWTH = 1.13;
 const COST_SOFTCAP_OWNED = 68;
 const PRICE_GROWTH_POST_SOFTCAP = 1.065;
@@ -379,9 +380,19 @@ function registerServiceWorker() {
   }
 
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("./service-worker.js").catch((error) => {
-      console.warn("Service worker registration failed:", error);
-    });
+    navigator.serviceWorker
+      .register("./service-worker.js")
+      .then((registration) => {
+        Promise.race([
+          registration.update(),
+          new Promise((resolve) => setTimeout(resolve, SERVICE_WORKER_UPDATE_TIMEOUT_MS))
+        ]).catch((error) => {
+          console.warn("Service worker update check failed:", error);
+        });
+      })
+      .catch((error) => {
+        console.warn("Service worker registration failed:", error);
+      });
   });
 }
 
@@ -837,15 +848,19 @@ function getCurrentIncorporationThreshold() {
   return PRESTIGE_THRESHOLD * Math.pow(INCORPORATION_THRESHOLD_GROWTH, state.incorporations);
 }
 
+function getIncorporationSurplusCash() {
+  return Math.max(0, state.cash - getCurrentIncorporationThreshold());
+}
+
 function calcInfluenceGain() {
   const threshold = getCurrentIncorporationThreshold();
   if (state.cash < threshold) {
     return 0;
   }
 
-  // Logarithmic scaling by cash on hand relative to current incorporation threshold.
-  const ratio = state.cash / threshold;
-  return Math.max(1, Math.floor(Math.log10(ratio) * 5) + 1);
+  const surplusCash = getIncorporationSurplusCash();
+  const normalizedSurplus = surplusCash / threshold;
+  return Math.max(1, Math.floor(Math.sqrt(normalizedSurplus) * 6));
 }
 
 function canIncorporate() {
@@ -1587,7 +1602,7 @@ function render() {
   els.influenceValue.textContent = formatNumber(state.influence);
   els.lifetimeValue.textContent = formatMoney(state.lifetimeEarnings);
   els.prestigeBonusValue.textContent = `+${formatNumber((getInfluenceMultiplier() - 1) * 100)}%`;
-  els.incorporateThresholdText.textContent = `Reach ${formatMoney(getCurrentIncorporationThreshold())} cash to Incorporate.`;
+  els.incorporateThresholdText.textContent = `Pay ${formatMoney(getCurrentIncorporationThreshold())} cash to Incorporate.`;
   els.incorporateGain.textContent = `+${formatNumber(calcInfluenceGain())}`;
   els.incorporateButton.disabled = !canIncorporate();
   for (const button of els.buyModeButtons) {
@@ -1774,12 +1789,17 @@ function resetGame() {
 
 function incorporate() {
   const threshold = getCurrentIncorporationThreshold();
+  const surplusCash = getIncorporationSurplusCash();
   const gain = calcInfluenceGain();
   if (state.cash < threshold || gain < 1) {
     return;
   }
 
-  const confirmed = confirm(`Incorporate now for +${gain} Influence at ${formatMoney(threshold)}? This resets cash, businesses, and upgrades.`);
+  const confirmed = confirm(
+    `Incorporate now for +${gain} Influence at ${formatMoney(threshold)}? ` +
+    `Prestige is based on surplus cash of ${formatMoney(surplusCash)} after paying the incorporation cost. ` +
+    "This resets cash, businesses, and upgrades."
+  );
   if (!confirmed) {
     return;
   }

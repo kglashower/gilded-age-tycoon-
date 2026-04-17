@@ -1,6 +1,7 @@
 "use strict";
 
-const CACHE_VERSION = "gilded-age-tycoon-v2";
+const CACHE_VERSION = "gilded-age-tycoon-v3";
+const NETWORK_TIMEOUT_MS = 3000;
 const CORE_ASSETS = [
   "./",
   "./index.html",
@@ -30,9 +31,59 @@ const CORE_ASSETS = [
   "./assets/icons/upgrade-campaign.svg"
 ];
 
+function openAppCache() {
+  return caches.open(CACHE_VERSION);
+}
+
+function fetchWithTimeout(request, timeoutMs = NETWORK_TIMEOUT_MS) {
+  return new Promise((resolve, reject) => {
+    const timeoutId = setTimeout(() => reject(new Error("Network timeout")), timeoutMs);
+    fetch(request)
+      .then((response) => {
+        clearTimeout(timeoutId);
+        resolve(response);
+      })
+      .catch((error) => {
+        clearTimeout(timeoutId);
+        reject(error);
+      });
+  });
+}
+
+async function networkFirstNavigation(request) {
+  try {
+    const response = await fetchWithTimeout(request);
+    if (response && response.ok) {
+      const cache = await openAppCache();
+      cache.put("./index.html", response.clone());
+    }
+    return response;
+  } catch (error) {
+    const cachedPage = await caches.match("./index.html");
+    if (cachedPage) {
+      return cachedPage;
+    }
+    throw error;
+  }
+}
+
+async function cacheFirstAsset(request) {
+  const cached = await caches.match(request);
+  if (cached) {
+    return cached;
+  }
+
+  const response = await fetch(request);
+  if (response.ok) {
+    const cache = await openAppCache();
+    cache.put(request, response.clone());
+  }
+  return response;
+}
+
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE_VERSION).then((cache) => cache.addAll(CORE_ASSETS))
+    openAppCache().then((cache) => cache.addAll(CORE_ASSETS))
   );
   self.skipWaiting();
 });
@@ -57,31 +108,9 @@ self.addEventListener("fetch", (event) => {
   }
 
   if (event.request.mode === "navigate") {
-    event.respondWith(
-      fetch(event.request)
-        .then((response) => {
-          const copy = response.clone();
-          caches.open(CACHE_VERSION).then((cache) => cache.put("./index.html", copy));
-          return response;
-        })
-        .catch(() => caches.match("./index.html"))
-    );
+    event.respondWith(networkFirstNavigation(event.request));
     return;
   }
 
-  event.respondWith(
-    caches.match(event.request).then((cached) => {
-      if (cached) {
-        return cached;
-      }
-
-      return fetch(event.request).then((response) => {
-        if (response.ok) {
-          const copy = response.clone();
-          caches.open(CACHE_VERSION).then((cache) => cache.put(event.request, copy));
-        }
-        return response;
-      });
-    })
-  );
+  event.respondWith(cacheFirstAsset(event.request));
 });

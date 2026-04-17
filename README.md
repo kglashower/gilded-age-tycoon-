@@ -93,8 +93,8 @@ Note: PWA/offline mode requires serving over `http://localhost` (for local devel
 ### Incorporation (Prestige)
 
 - Incorporation can be repeated multiple times.
-- Threshold increases after each Incorporation.
-- Influence gain scales logarithmically with cash on hand relative to current threshold.
+- Incorporation cost increases exponentially after each Incorporation.
+- Influence gain is based on the square root of surplus cash after subtracting the current incorporation cost.
 - Incorporating resets run progression (cash, businesses, upgrades), but keeps long-term progression systems.
 - Influence provides a permanent global income bonus (`+3%` per Influence).
 - Incorporation thresholds continue to scale upward each time.
@@ -134,6 +134,8 @@ Note: PWA/offline mode requires serving over `http://localhost` (for local devel
 
 - Web app manifest and service worker included.
 - Offline-capable when served over `http://localhost` or `https`.
+- On launch, the app checks for a fresh service worker version.
+- If the server cannot be reached quickly, navigation falls back to the most recently cached build instead of blocking startup.
 - Home-screen icon support configured for Android and iOS:
   - Manifest icons (`192x192`, `512x512`, including maskable purpose).
   - Apple touch icon (`180x180`) and mobile web app metadata.
